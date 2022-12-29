@@ -15,6 +15,7 @@ namespace MassiveRocketAssignment.Storage
     {
         private static string? EndpointUri;
         private static string? PrimaryKey;
+        private static int MaxRULimit;
         private static CosmosClient _cosmosClient;
         private Database _database;
         private Container _container;
@@ -25,11 +26,18 @@ namespace MassiveRocketAssignment.Storage
         {
             EndpointUri = configuration.GetValue<string>("EndpointUri");
             PrimaryKey = configuration.GetValue<string>("PrimaryKey");
+            MaxRULimit = configuration.GetValue<int>("MaxRULimit");
 
             EndpointUri.ShouldNotBeNull();
             PrimaryKey.ShouldNotBeNull();
 
-            _cosmosClient = new CosmosClient(EndpointUri, PrimaryKey, new CosmosClientOptions() { ApplicationName = "MassiveRocketAssignement" });
+            var cosomsClientOptions = new CosmosClientOptions()
+            {
+                ApplicationName = "MassiveRocketAssignement",
+                AllowBulkExecution = true
+            };
+
+            _cosmosClient = new CosmosClient(EndpointUri, PrimaryKey, cosomsClientOptions);
 
             CreateDatabaseAsync().Wait();
             CreateContainerAsync().Wait();
@@ -49,12 +57,12 @@ namespace MassiveRocketAssignment.Storage
             _database.ShouldNotBeNull();
 
             ContainerProperties containerProperties = new ContainerProperties(containerId, "/partitionKey");
-            ThroughputProperties autoscaleThroughputProperties = ThroughputProperties.CreateAutoscaleThroughput(4000);
+            ThroughputProperties autoscaleThroughputProperties = ThroughputProperties.CreateAutoscaleThroughput(MaxRULimit);
 
             _container = await _database.CreateContainerIfNotExistsAsync(containerProperties, autoscaleThroughputProperties);
         }
 
-        public async Task InsertBulkAsync(Dictionary<string, IEnumerable<ClientEntity>> clientEntities)
+        public async Task InsertBulkAsync(IEnumerable<ClientEntity> clientEntities)
         {
             int errorCount = 0;
 
@@ -86,19 +94,15 @@ namespace MassiveRocketAssignment.Storage
                                         }
                                     }));
 
-        }
-
-            var tasks = new List<Task>();
-
-            foreach (var clientBatch in clientEntities)
-            {
-                Console.WriteLine($"Start Processing batch : {DateTime.Now}");
-                var result = clientBatch.Value.Select(ce => CreateTask(ce));
-                await Task.WhenAll(result);
-                Console.WriteLine($"End Processing batch : {DateTime.Now}");
-                Console.WriteLine($"Error Count - {errorCount}");
             }
 
+            Console.WriteLine($"Start Processing batch : {DateTime.Now}");
+
+            var result = clientEntities.Select(ce => CreateTask(ce));
+            await Task.WhenAll(result);
+
+            Console.WriteLine($"End Processing batch : {DateTime.Now}");
+            Console.WriteLine($"Error Count - {errorCount}");
             File.AppendAllText("D:\\Log.txt", stringBuilder.ToString());
         }
 

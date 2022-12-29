@@ -1,6 +1,7 @@
 ﻿using MassiveRocketAssignment.Storage;
 using MassiveRocketAssignment.Utilities;
 using MassiveRocketAssignment.Validation;
+using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,36 +10,35 @@ using System.Threading.Tasks;
 
 namespace MassiveRocketAssignment.Processors
 {
-    public class BatchProcessor : IBatchProcessor
+    public class BatchProcessor<T> : IBatchProcessor<T>
     {
-        private static readonly int BatchSize = 20000;
+        private readonly int BatchSize;
+        public BatchProcessor(IConfiguration configuration) 
+        {
+            BatchSize = configuration.GetValue<int>("BatchSize");
+        } 
 
-        public Dictionary<string, IEnumerable<ClientEntity>> CreateBatches(IEnumerable<string> entities)
+        public IEnumerable<IEnumerable<T>> CreateBatches(IEnumerable<T> entities)
         {
             entities.ShouldNotBeNull();
 
-            var clientBatch = new Dictionary<string, IEnumerable<ClientEntity>>();
             int batchCount = 0;
-            string batchIdentifier;
+
             while (batchCount < entities.Count())
             {
-                batchIdentifier = $"Batch-{Guid.NewGuid()}";
-
-                var clientEntityResult = GetClientInfoBatch(entities, batchCount, batchIdentifier);
-
-                clientBatch.Add(batchIdentifier, clientEntityResult);
+                var clientEntityResult = this.GetClientInfoBatch(entities, batchCount);
 
                 batchCount = batchCount + BatchSize;
-            }
 
-            return clientBatch;
+                yield return clientEntityResult;
+            }
         }
 
-        private static IEnumerable<ClientEntity> GetClientInfoBatch(IEnumerable<string> entities, int batchCount, string partitionKey)
+        private IEnumerable<T> GetClientInfoBatch(IEnumerable<T> entities, int batchCount)
         {
             var result = entities.Skip(batchCount).Take(BatchSize).Select(batch => batch);
 
-            return result.Select(csv => csv.ToClientEntity(partitionKey));
+            return result;
         }
     }
 }

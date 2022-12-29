@@ -7,8 +7,8 @@ using System.Threading.Tasks;
 
 namespace MassiveRocketAssignment.Processors
 {
-    public interface IBatchProcessor
+    public interface IBatchProcessor<T>
     {
-        Dictionary<string,IEnumerable<ClientEntity>> CreateBatches(IEnumerable<string> entities);
+        IEnumerable<IEnumerable<T>> CreateBatches(IEnumerable<T> entities);
     }
 }

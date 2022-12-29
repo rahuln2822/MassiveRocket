@@ -10,7 +10,6 @@ namespace MassiveRocketAssignment.Readers
 {
     public interface IReader
     {
-        Dictionary<string, IEnumerable<ClientEntity>> ReadAsEntityBatches(string filepath);
         IEnumerable<string> Read(string filepath);
     }
 }

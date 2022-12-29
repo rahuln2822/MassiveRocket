@@ -13,12 +13,6 @@ namespace MassiveRocketAssignment.Readers
 {
     public class CsvReader : IReader
     {
-        private readonly IBatchProcessor _batchProcessor;
-        public CsvReader(IBatchProcessor batchProcessor)
-        {
-            _batchProcessor = batchProcessor;
-        }
-
         public IEnumerable<string> Read(string filepath)
         {
             using (var streamReader = new StreamReader(filepath))
@@ -34,23 +28,5 @@ namespace MassiveRocketAssignment.Readers
                 }
             }
         }
-
-        public Dictionary<string, IEnumerable<ClientEntity>> ReadAsEntityBatches(string filepath)
-        {
-            var csvContent = Read(filepath).Distinct();
-
-            var csvBatches = _batchProcessor.CreateBatches(csvContent);
-
-            return csvBatches;
-        }
-
-        //public Dictionary<string,IEnumerable<ClientEntity>> ReadEntityInBatches(string filepath)
-        //{
-        //    var csvContent = Read(filepath).Distinct();
-
-        //    var clientEntities = csvContent.Select(cc => cc.ToClientEntity());
-
-        //    return _batchProcessor.CreateBatches(clientEntities);
-        //}
     }
 }

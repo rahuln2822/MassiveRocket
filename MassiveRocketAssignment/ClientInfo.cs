@@ -1,5 +1,7 @@
-﻿using MassiveRocketAssignment.Readers;
+﻿using MassiveRocketAssignment.Processors;
+using MassiveRocketAssignment.Readers;
 using MassiveRocketAssignment.Storage;
+using MassiveRocketAssignment.Utilities;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using System;
 using System.Collections.Generic;
@@ -13,18 +15,31 @@ namespace MassiveRocketAssignment
     {
         private IReader _reader;
         private readonly ICustomerCosmosRepository _customerCosmosRepository;
+        private readonly IBatchProcessor<string> _batchProcessor;
 
-        public ClientInfo(IReader reader, ICustomerCosmosRepository customerCosmosRepository)
+        public ClientInfo(IReader reader, ICustomerCosmosRepository customerCosmosRepository, IBatchProcessor<string> batchProcessor)
         {
             _reader = reader;
             _customerCosmosRepository = customerCosmosRepository;
+            _batchProcessor = batchProcessor;
         }
 
         public async Task AddClientsByCsv(string filePath)
         {
-            var results = _reader.ReadAsEntityBatches(filePath);
+            var results = _reader.Read(filePath);
 
-            await _customerCosmosRepository.InsertBulkAsync(results);
+            var batches = _batchProcessor.CreateBatches(results);
+
+            string customerIdentity = "Customer1";
+
+            foreach (var csvBatch in batches)
+            {
+                customerIdentity = $"{customerIdentity}-{Guid.NewGuid()}";
+
+                var clientBatch = csvBatch.Select(csv => csv.ToClientEntity(customerIdentity));
+
+                await _customerCosmosRepository.InsertBulkAsync(clientBatch);
+            }
         }
 
         public async Task<IEnumerable<ClientEntity>> GetClient(string firstName)

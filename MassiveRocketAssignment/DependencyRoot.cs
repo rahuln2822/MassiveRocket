@@ -19,7 +19,7 @@ namespace MassiveRocketAssignment
             serviceCollection.AddSingleton<ICustomerCosmosRepository, CustomerCosmosRepository>();
             serviceCollection.AddSingleton<IReader, CsvReader>();
             serviceCollection.AddSingleton<IClientInfo, ClientInfo>();
-            serviceCollection.AddSingleton<IBatchProcessor, BatchProcessor>();
+            serviceCollection.AddSingleton<IBatchProcessor<string>, BatchProcessor<string>>();
         }
 
         public static IHost CreateHost(Action<HostBuilderContext, IServiceCollection> serviceHostBuilder) 

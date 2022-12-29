@@ -19,14 +19,12 @@ public class Program
     public static async Task Main(string[] args)
     {
         //mr-cosmos-westus-rg
-        Console.WriteLine("Hello, World!");
         var stopwatch = new Stopwatch();
         stopwatch.Start();
 
         Console.WriteLine("Start Time - " + DateTime.Now);
 
         var host = DependencyRoot.CreateHost(DependencyRoot.RegisterDependency);
-
         await host.StartAsync();
 
         Console.WriteLine(Directory.Exists(ProjectSampleDataFolder));

@@ -13,7 +13,7 @@ namespace MassiveRocketAssignment.Storage
 
         Task CreateContainerAsync();
 
-        Task InsertBulkAsync(Dictionary<string, IEnumerable<ClientEntity>> clientEntities);
+        Task InsertBulkAsync(IEnumerable<ClientEntity> clientEntities);
 
         Task<IEnumerable<ClientEntity>> GetClientByFirstName(string firstName);
 
