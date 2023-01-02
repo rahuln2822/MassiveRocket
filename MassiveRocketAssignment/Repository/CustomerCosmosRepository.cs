@@ -16,25 +16,27 @@ namespace MassiveRocketAssignment.Storage
         private static string? EndpointUri;
         private static string? PrimaryKey;
         private static int MaxRULimit;
+        private static bool AllowBulkInsert;
         private static CosmosClient _cosmosClient;
         private Database _database;
         private Container _container;
-        private string databaseId = "ToDoList";
-        private string containerId = "Items";
+        private string databaseId = Constants.DatabaseName;
+        private string containerId = Constants.CustomerName;
 
         public CustomerCosmosRepository(IConfiguration configuration)
         {
             EndpointUri = configuration.GetValue<string>("EndpointUri");
             PrimaryKey = configuration.GetValue<string>("PrimaryKey");
-            MaxRULimit = configuration.GetValue<int>("MaxRULimit");
+            MaxRULimit = configuration.GetValue<int?>("MaxRULimit") ?? 2000;
+            AllowBulkInsert = configuration.GetValue<bool?>("AllowBulkInsert") ?? false;
 
             EndpointUri.ShouldNotBeNull();
-            PrimaryKey.ShouldNotBeNull();
+            PrimaryKey.ShouldNotBeNull();      
 
             var cosomsClientOptions = new CosmosClientOptions()
             {
-                ApplicationName = "MassiveRocketAssignement",
-                AllowBulkExecution = true
+                ApplicationName = Constants.ApplicationName,
+                AllowBulkExecution = AllowBulkInsert
             };
 
             _cosmosClient = new CosmosClient(EndpointUri, PrimaryKey, cosomsClientOptions);

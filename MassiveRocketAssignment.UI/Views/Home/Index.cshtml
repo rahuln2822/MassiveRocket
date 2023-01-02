@@ -1,0 +1,46 @@
+﻿@using MassiveRocketAssignment.Utilities;
+@model FileUpload
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-6">Welcome @Constants.CustomerName</h1>
+</div>
+<form enctype="multipart/form-data" method="post">
+    <div class="form-group">
+        <label class="file">
+            <input type="file" asp-for="FormFiles" multiple aria-label="File browser example">
+            <span class="file-custom"></span>
+        </label>   
+        <input asp-controller="Home" asp-action="Index" class="btn btn-primary" type="submit" value="Upload">
+    </div>    
+    @{
+        if (ViewBag.SuccessMsg != null)
+        {
+            <span class="badge-success"> @ViewBag.SuccessMsg </span>
+        }
+    }
+    <div><input asp-controller="Home" asp-action="Save" class="btn btn-primary" type="submit" value="Save"></div>
+    @{
+        if (ViewData["Status"] != null)
+        {
+            <table>
+                <tr>
+                    <td>File name</td>
+                    <td>Record Count</td>
+                </tr>
+                @{
+                    foreach (var item in ViewData["Status"] as IEnumerable<Tuple<string, int>>)
+                    {
+                        <tr>
+                            <td>@item.Item1</td>
+                            <td>@item.Item2</td>
+                        </tr>
+                    }
+                }
+            </table>
+        }
+    }   
+
+</form>

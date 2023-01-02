@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>aspnet-MassiveRocketAssignment.UI-4d572580-1ad4-4de6-96ea-5a55a722f40b</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="6.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="6.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="6.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MassiveRocketAssignment\MassiveRocketAssignment.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Uploads\" />
+  </ItemGroup>
+
+</Project>

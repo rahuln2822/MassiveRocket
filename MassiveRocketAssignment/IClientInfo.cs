@@ -10,7 +10,7 @@ namespace MassiveRocketAssignment
     public interface IClientInfo
     {
         Task<IEnumerable<ClientEntity>> GetClient(string firstName);
-        Task AddClientsByCsv(string filePath);
+        Task AddClientsByCsv(IEnumerable<string> csvContent);
         Task<int> GetClientsCount();
     }
 }

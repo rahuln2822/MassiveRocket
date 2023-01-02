@@ -12,16 +12,31 @@ namespace MassiveRocketAssignment.Utilities
     public static class Utilities
     {
         public static ClientEntity ToClientEntity(this string csvLine, string partitionKey)
-        {
-            string[] values = csvLine.Split(',');
+        {            
             var clientEntity = new ClientEntity();
+            try
+            {
+                string[] values = csvLine.Split(',');
 
-            clientEntity.Id = Guid.NewGuid();
-            clientEntity.PartitionKey = partitionKey;
-            clientEntity.FirstName = values[0];
-            clientEntity.LastName = values[1];
-            clientEntity.Email = values[2];
-            clientEntity.ContactNumber = values[3];
+                if (values.Length == 4)
+                {
+                    clientEntity.Id = Guid.NewGuid();
+                    clientEntity.PartitionKey = partitionKey;
+                    clientEntity.FirstName = values[0];
+                    clientEntity.LastName = values[1];
+                    clientEntity.Email = values[2];
+                    clientEntity.ContactNumber = values[3];
+
+                }
+                else
+                {
+                    throw new ArgumentException($"Insufficient data - {csvLine}");
+                }
+            }
+            catch (Exception ex)
+            {
+                throw;
+            }
 
             return clientEntity;
         }

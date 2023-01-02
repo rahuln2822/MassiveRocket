@@ -3,7 +3,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33205.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MassiveRocketAssignment", "MassiveRocketAssignment\MassiveRocketAssignment.csproj", "{9A8B6DCF-281E-411E-A3DC-CBEA10202774}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MassiveRocketAssignment", "MassiveRocketAssignment\MassiveRocketAssignment.csproj", "{9A8B6DCF-281E-411E-A3DC-CBEA10202774}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MassiveRocketAssignment.Tests", "MassiveRocketAssignment.Tests\MassiveRocketAssignment.Tests.csproj", "{45FD7B5D-4E60-4232-B484-C342F7E15EED}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MassiveRocketAssignment.UI", "MassiveRocketAssignment.UI\MassiveRocketAssignment.UI.csproj", "{729598C5-947E-4A24-A5A3-CD9833629AF7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{1D371130-1763-4873-BC29-6D6DBFB9ABA0}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +24,14 @@ Global
 		{9A8B6DCF-281E-411E-A3DC-CBEA10202774}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A8B6DCF-281E-411E-A3DC-CBEA10202774}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A8B6DCF-281E-411E-A3DC-CBEA10202774}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45FD7B5D-4E60-4232-B484-C342F7E15EED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45FD7B5D-4E60-4232-B484-C342F7E15EED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45FD7B5D-4E60-4232-B484-C342F7E15EED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45FD7B5D-4E60-4232-B484-C342F7E15EED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{729598C5-947E-4A24-A5A3-CD9833629AF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{729598C5-947E-4A24-A5A3-CD9833629AF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{729598C5-947E-4A24-A5A3-CD9833629AF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{729598C5-947E-4A24-A5A3-CD9833629AF7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

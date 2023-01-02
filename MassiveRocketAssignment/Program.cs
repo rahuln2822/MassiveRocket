@@ -33,7 +33,7 @@ public class Program
 
         if (client != null)
         {
-            await client.AddClientsByCsv($@"{ProjectSampleDataFolder}\1M-Sales-Records-Sample-1.csv");
+            await client.AddClientsByCsv(null);
         }
         else
         { 
