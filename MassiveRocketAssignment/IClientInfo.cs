@@ -12,5 +12,6 @@ namespace MassiveRocketAssignment
         Task<IEnumerable<ClientEntity>> GetClient(string firstName);
         Task AddClientsByCsv(IEnumerable<string> csvContent);
         Task<int> GetClientsCount();
+        Task<IEnumerable<ClientEntity>> GetAllClient(int pageSize, int skipRecords);
     }
 }

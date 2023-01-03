@@ -126,9 +126,9 @@ namespace MassiveRocketAssignment.Storage
             return list;
         }
 
-        public async Task<IEnumerable<ClientEntity>> GetAllClient(string firstName)
+        public async Task<IEnumerable<ClientEntity>> GetAllClient(int pageSize, int skipRecords)
         {
-            var sqlQueryText = $"SELECT * FROM c";
+            var sqlQueryText = $"SELECT * FROM c OFFSET {skipRecords} LIMIT {pageSize}";
 
             QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
             var queryResultSetIterator = _container.GetItemQueryIterator<ClientEntity>(queryDefinition);

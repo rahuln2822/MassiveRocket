@@ -1,46 +1,119 @@
 ﻿@using MassiveRocketAssignment.Utilities;
-@model FileUpload
+@using MassiveRocketAssignment.UI.Models;
+@model ViewModel
 @{
     ViewData["Title"] = "Home Page";
 }
 
+
 <div class="text-center">
-    <h1 class="display-6">Welcome @Constants.CustomerName</h1>
+    <h1 class="display-4">Welcome</h1>
 </div>
+<div />
+<div />
 <form enctype="multipart/form-data" method="post">
-    <div class="form-group">
-        <label class="file">
-            <input type="file" asp-for="FormFiles" multiple aria-label="File browser example">
-            <span class="file-custom"></span>
-        </label>   
-        <input asp-controller="Home" asp-action="Index" class="btn btn-primary" type="submit" value="Upload">
-    </div>    
-    @{
-        if (ViewBag.SuccessMsg != null)
-        {
-            <span class="badge-success"> @ViewBag.SuccessMsg </span>
-        }
-    }
-    <div><input asp-controller="Home" asp-action="Save" class="btn btn-primary" type="submit" value="Save"></div>
-    @{
-        if (ViewData["Status"] != null)
-        {
-            <table>
-                <tr>
-                    <td>File name</td>
-                    <td>Record Count</td>
-                </tr>
+    <table align="center">
+        <tr>
+            <td style="padding-left:330px">
+                <div>
+                    <div class="form-group align-content-center">
+                        <label class="file" >
+                            <input type="file" asp-for="FileUpload.FormFiles" multiple aria-label="File browser example">
+                            <span class="file-custom"></span>
+                        </label>
+                        @{
+                            if (ViewBag.SuccessMsg != null)
+                            {
+                                <span class="badge-success"> @ViewBag.SuccessMsg </span>
+                            }
+                        }
+                    </div>
+
+                    @{
+                        if (ViewData["Status"] != null)
+                        {
+                            <table class="table table-active">
+                                <tr>
+                                    <td>File name</td>
+                                    <td>Record Count</td>
+                                </tr>
+                                @{
+                                    foreach (var item in ViewData["Status"] as IEnumerable<Tuple<string, int>>)
+                                    {
+                                        <tr>
+                                            <td>@item.Item1</td>
+                                            <td>@item.Item2</td>
+                                        </tr>
+                                    }
+                                }
+                            </table>
+                        }
+                    }
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <table class="table">
+                    <tr>
+                        <td>
+                            <input asp-controller="Home" asp-action="Index" class="btn btn-primary" type="submit" value="Upload">
+                        </td>
+                        <td>
+                            <input asp-controller="Home" asp-action="Save" class="btn btn-primary" type="submit" value="Save">
+                        </td>
+                        <td>
+                            <input asp-controller="Home" asp-action="Display" class="btn btn-primary" type="submit" value="Display Records">
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+    <table align="center">
+        <tr>
+            <td style="padding-right:330px">
                 @{
-                    foreach (var item in ViewData["Status"] as IEnumerable<Tuple<string, int>>)
+                    if (Model != null)
                     {
-                        <tr>
-                            <td>@item.Item1</td>
-                            <td>@item.Item2</td>
-                        </tr>
+                        <div style="overflow:scroll; max-height:350px; width:1000px" class="align-content-center form-group">
+                            <table class="table table-striped">
+                                <tr>
+                                    <td>Id</td>
+                                    <td>FirstName</td>
+                                    <td>LastName</td>
+                                    <td>Email</td>
+                                    <td>ContactNumber</td>
+                                </tr>
+                                @foreach (var item in Model.PaginationModel.ClientEntities)
+                                {
+                                    <tr>
+                                        <td>@item.Id</td>
+                                        <td>@item.FirstName</td>
+                                        <td>@item.LastName</td>
+                                        <td>@item.Email</td>
+                                        <td>@item.ContactNumber</td>
+                                    </tr>
+                                }
+                            </table>                            
+                        </div>
+                        <div>
+                            <ul class="pagination" style="width:1000px">
+                                @for (var j = 0; j < Model.PaginationModel.MinimumPagesToDisplay; j++)
+                                {
+                                    int pageNumber = @Model.PaginationModel.LastPage + @j;
+                                    <li class="page-item @(pageNumber == Model.PaginationModel.CurrentPage ? "active" : "")" style="width:1000px">
+                                        <a asp-controller="Home" asp-action="Display" asp-route-currentpage="@pageNumber" class="page-link">@pageNumber</a>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
                     }
                 }
-            </table>
-        }
-    }   
+
+            </td>
+        </tr>
+
+    </table>
 
 </form>

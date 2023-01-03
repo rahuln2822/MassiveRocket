@@ -2,6 +2,7 @@
 using MassiveRocketAssignment.Readers;
 using MassiveRocketAssignment.Storage;
 using MassiveRocketAssignment.UI.Data;
+using MassiveRocketAssignment.UI.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Configuration;

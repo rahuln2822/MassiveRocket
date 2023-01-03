@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Hosting;
 using MassiveRocketAssignment.Readers;
 using MassiveRocketAssignment.Utilities;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 
 namespace MassiveRocketAssignment.UI.Controllers
 {
@@ -18,7 +19,9 @@ namespace MassiveRocketAssignment.UI.Controllers
         private static string FolderBasePath = System.AppDomain.CurrentDomain.BaseDirectory;
         string FolderPath = $@"{FolderBasePath}\{Constants.FolderName}\{Constants.CustomerName}";
 
-        public FileUpload fileUpload { get; set; }
+        private int RecordCount = 0;
+
+        private static PaginationModel PaginationModel = new PaginationModel();
 
         public HomeController(ILogger<HomeController> logger, IClientInfo clientInfo, IReader reader)
         {
@@ -27,19 +30,19 @@ namespace MassiveRocketAssignment.UI.Controllers
             _csvReader = reader;
         }
 
-        public IActionResult Index(FileUpload postedFile)
+        public IActionResult Index(ViewModel postedFile)
         {
             if (!Directory.Exists(FolderPath))
             {
                 Directory.CreateDirectory(FolderPath);
             }
 
-            if(postedFile?.FormFiles == null) 
+            if(postedFile?.FileUpload?.FormFiles == null) 
             {
                 return View();
             }
 
-            foreach (var formFile in postedFile?.FormFiles)
+            foreach (var formFile in postedFile?.FileUpload?.FormFiles)
             {
                 if (formFile.Length > 0)
                 {
@@ -71,7 +74,7 @@ namespace MassiveRocketAssignment.UI.Controllers
                 }
             }
 
-            ViewBag.SuccessMsg = postedFile.FormFiles.Count.ToString() + " files uploaded!!";
+            ViewBag.SuccessMsg = postedFile?.FileUpload?.FormFiles.Count.ToString() + " files uploaded!!";
             _logger.LogInformation("File upload successful");
             return View();
         }
@@ -84,6 +87,8 @@ namespace MassiveRocketAssignment.UI.Controllers
                 string filename = Path.GetFileName(filepath);
                 var results = _csvReader.Read(filepath).Skip(1);
 
+                RecordCount = RecordCount + results.Count();
+
                 status.Add(Tuple.Create(filename, results.Count()));
                 await _clientInfo.AddClientsByCsv(results);
 
@@ -92,6 +97,19 @@ namespace MassiveRocketAssignment.UI.Controllers
 
             ViewData["Status"] = status;
             return View("Index");
+        }
+
+        public async Task<IActionResult> Display(int currentPage = 1)
+        {
+            var vm = new ViewModel();
+            //var PaginationModel = new PaginationModel(RecordCount == 0 ? _clientInfo.GetClientsCount().Result : RecordCount);
+            PaginationModel.CurrentPage = currentPage;            
+            PaginationModel.LastPage = currentPage - 10 < 1 ? 1 : currentPage - 10;
+            var skipRecords = (currentPage - 1) * PaginationModel.PageSize;
+            var results = await _clientInfo.GetAllClient(PaginationModel.PageSize, skipRecords);
+            PaginationModel.ClientEntities = results.ToList();
+            vm.PaginationModel = PaginationModel;
+            return View("Index", vm);
         }
 
         public IActionResult Privacy()

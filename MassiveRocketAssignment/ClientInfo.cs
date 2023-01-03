@@ -54,6 +54,13 @@ namespace MassiveRocketAssignment
             return result;
         }
 
+        public async Task<IEnumerable<ClientEntity>> GetAllClient(int pageSize, int skipRecords)
+        {
+            var result = await _customerCosmosRepository.GetAllClient(pageSize, skipRecords);
+
+            return result;
+        }
+
         public async Task<int> GetClientsCount()
         {
             var result = await _customerCosmosRepository.GetClientsCount();
