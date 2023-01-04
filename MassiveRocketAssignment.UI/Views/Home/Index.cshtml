@@ -28,27 +28,6 @@
                             }
                         }
                     </div>
-
-                    @{
-                        if (ViewData["Status"] != null)
-                        {
-                            <table class="table table-active">
-                                <tr>
-                                    <td>File name</td>
-                                    <td>Record Count</td>
-                                </tr>
-                                @{
-                                    foreach (var item in ViewData["Status"] as IEnumerable<Tuple<string, int>>)
-                                    {
-                                        <tr>
-                                            <td>@item.Item1</td>
-                                            <td>@item.Item2</td>
-                                        </tr>
-                                    }
-                                }
-                            </table>
-                        }
-                    }
                 </div>
             </td>
         </tr>
@@ -69,6 +48,31 @@
                 </table>
             </td>
         </tr>
+        <tr>
+
+            <td>
+                @{
+                    if (ViewData["Status"] != null)
+                    {
+                        <table class="table table-active">
+                            <tr>
+                                <td>File name</td>
+                                <td>Record Count</td>
+                            </tr>
+                            @{
+                                foreach (var item in ViewData["Status"] as IEnumerable<Tuple<string, int>>)
+                                {
+                                    <tr>
+                                        <td>@item.Item1</td>
+                                        <td>@item.Item2</td>
+                                    </tr>
+                                }
+                            }
+                        </table>
+                    }
+                }
+            </td>
+        </tr>
     </table>
     <table align="center">
         <tr>
@@ -79,7 +83,6 @@
                         <div style="overflow:scroll; max-height:350px; width:1000px" class="align-content-center form-group">
                             <table class="table table-striped">
                                 <tr>
-                                    <td>Id</td>
                                     <td>FirstName</td>
                                     <td>LastName</td>
                                     <td>Email</td>
@@ -88,7 +91,6 @@
                                 @foreach (var item in Model.PaginationModel.ClientEntities)
                                 {
                                     <tr>
-                                        <td>@item.Id</td>
                                         <td>@item.FirstName</td>
                                         <td>@item.LastName</td>
                                         <td>@item.Email</td>

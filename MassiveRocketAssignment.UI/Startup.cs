@@ -2,10 +2,10 @@
 using MassiveRocketAssignment.Readers;
 using MassiveRocketAssignment.Storage;
 using MassiveRocketAssignment.UI.Data;
-using MassiveRocketAssignment.UI.Models;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.EntityFrameworkCore;
-using System.Configuration;
 
 namespace MassiveRocketAssignment.UI
 {
@@ -24,6 +24,18 @@ namespace MassiveRocketAssignment.UI
 
             services.AddDbContext<ApplicationDbContext>(options =>
             options.UseSqlServer(connectionString));
+
+            services.Configure<FormOptions>(x =>
+            {
+                x.ValueLengthLimit = int.MaxValue;
+                x.MultipartBodyLengthLimit = int.MaxValue;
+                x.MultipartHeadersLengthLimit = int.MaxValue;
+            });
+
+            services.Configure<KestrelServerOptions>(options =>
+            {
+                options.Limits.MaxRequestBodySize = int.MaxValue;
+            });
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 

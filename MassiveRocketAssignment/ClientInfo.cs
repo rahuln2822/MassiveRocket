@@ -2,14 +2,7 @@
 using MassiveRocketAssignment.Readers;
 using MassiveRocketAssignment.Storage;
 using MassiveRocketAssignment.Utilities;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MassiveRocketAssignment
 {
@@ -47,9 +40,9 @@ namespace MassiveRocketAssignment
             }
         }
 
-        public async Task<IEnumerable<ClientEntity>> GetClient(string firstName)
+        public async Task<IEnumerable<ClientEntity>> GetClient(string firstName, int pageSize, int skipRecords)
         {
-            var result = await _customerCosmosRepository.GetClientByFirstName(firstName);
+            var result = await _customerCosmosRepository.GetClientByFirstName(firstName, pageSize, skipRecords);
 
             return result;
         }
@@ -70,7 +63,7 @@ namespace MassiveRocketAssignment
 
         private IEnumerable<ClientEntity> ConvertBatchToClientEntity(IEnumerable<string> csvBatch)
         {
-            string customerIdentity = $"{Constants.CustomerName}-{Guid.NewGuid()}";
+            string customerIdentity = $"{Constants.CustomerName}";
 
             var result = csvBatch.Select(csv => ToClientEntity(csv, customerIdentity));
 
@@ -86,12 +79,13 @@ namespace MassiveRocketAssignment
 
                 if (values.Length == 4)
                 {
-                    clientEntity.Id = Guid.NewGuid();
+                    clientEntity.Id = $"{partitionKey}-{values[0]}-{values[3]}";
                     clientEntity.PartitionKey = partitionKey;
                     clientEntity.FirstName = values[0];
                     clientEntity.LastName = values[1];
                     clientEntity.Email = values[2];
                     clientEntity.ContactNumber = values[3];
+                    //clientEntity.Timestamp = DateTime.Now;
 
                 }
                 else

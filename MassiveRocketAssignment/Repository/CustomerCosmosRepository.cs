@@ -2,10 +2,8 @@
 using MassiveRocketAssignment.Validation;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
-using System.Collections.Concurrent;
-using System.Diagnostics.Metrics;
-using System.Net;
 using System.Text;
 using Container = Microsoft.Azure.Cosmos.Container;
 
@@ -17,13 +15,14 @@ namespace MassiveRocketAssignment.Storage
         private static string? PrimaryKey;
         private static int MaxRULimit;
         private static bool AllowBulkInsert;
-        private static CosmosClient _cosmosClient;
-        private Database _database;
-        private Container _container;
+        private static CosmosClient? _cosmosClient;
+        private Database? _database;
+        private Container? _container;
         private string databaseId = Constants.DatabaseName;
         private string containerId = Constants.CustomerName;
+        private readonly ILogger<CustomerCosmosRepository> _logger;
 
-        public CustomerCosmosRepository(IConfiguration configuration)
+        public CustomerCosmosRepository(IConfiguration configuration, ILogger<CustomerCosmosRepository> logger)
         {
             EndpointUri = configuration.GetValue<string>("EndpointUri");
             PrimaryKey = configuration.GetValue<string>("PrimaryKey");
@@ -31,7 +30,7 @@ namespace MassiveRocketAssignment.Storage
             AllowBulkInsert = configuration.GetValue<bool?>("AllowBulkInsert") ?? false;
 
             EndpointUri.ShouldNotBeNull();
-            PrimaryKey.ShouldNotBeNull();      
+            PrimaryKey.ShouldNotBeNull();
 
             var cosomsClientOptions = new CosmosClientOptions()
             {
@@ -40,6 +39,7 @@ namespace MassiveRocketAssignment.Storage
             };
 
             _cosmosClient = new CosmosClient(EndpointUri, PrimaryKey, cosomsClientOptions);
+            _logger = logger;
 
             CreateDatabaseAsync().Wait();
             CreateContainerAsync().Wait();
@@ -49,9 +49,9 @@ namespace MassiveRocketAssignment.Storage
         {
             _cosmosClient.ShouldNotBeNull();
 
-            var databaseResponse = await _cosmosClient.CreateDatabaseIfNotExistsAsync(databaseId);
+            var databaseResponse = await _cosmosClient?.CreateDatabaseIfNotExistsAsync(databaseId);
 
-            _database = databaseResponse.Database;
+            _database = databaseResponse?.Database;
         }
 
         public async Task CreateContainerAsync()
@@ -61,7 +61,7 @@ namespace MassiveRocketAssignment.Storage
             ContainerProperties containerProperties = new ContainerProperties(containerId, "/partitionKey");
             ThroughputProperties autoscaleThroughputProperties = ThroughputProperties.CreateAutoscaleThroughput(MaxRULimit);
 
-            _container = await _database.CreateContainerIfNotExistsAsync(containerProperties, autoscaleThroughputProperties);
+            _container = await _database?.CreateContainerIfNotExistsAsync(containerProperties, autoscaleThroughputProperties);
         }
 
         public async Task InsertBulkAsync(IEnumerable<ClientEntity> clientEntities)
@@ -73,25 +73,30 @@ namespace MassiveRocketAssignment.Storage
             Task CreateTask(ClientEntity clientEntity)
             {
                 return RetryManager.WaitAndRetryPolicy
-                                   .ExecuteAsync(() => _container.CreateItemAsync(clientEntity, new PartitionKey(clientEntity.PartitionKey))
+                                   .ExecuteAsync(() => _container?.UpsertItemAsync(clientEntity, new PartitionKey(clientEntity.PartitionKey))
                                    .ContinueWith(itemResponse =>
                                     {
                                         if (!itemResponse.IsCompletedSuccessfully)
                                         {
-                                            AggregateException innerExceptions = itemResponse.Exception.Flatten();
-                                            if (innerExceptions.InnerExceptions.FirstOrDefault(innerEx => innerEx is CosmosException) is CosmosException cosmosException)
+                                            AggregateException? innerExceptions = itemResponse?.Exception?.Flatten();
+                                            if (innerExceptions != null)
                                             {
-                                                errorCount++;
-                                                stringBuilder.AppendLine($"Received {cosmosException.StatusCode} ({cosmosException.Message}).");
-                                                //File.AppendAllText("D:\\Log.txt", $"Received {cosmosException.StatusCode} ({cosmosException.Message}).");
-                                                //Console.WriteLine($"Received {cosmosException.StatusCode} ({cosmosException.Message}).");
+                                                if (innerExceptions.InnerExceptions.FirstOrDefault(innerEx => innerEx is CosmosException) is CosmosException cosmosException)
+                                                {
+                                                    errorCount++;
+                                                    stringBuilder.AppendLine($"Received {cosmosException.StatusCode} ({cosmosException.Message}).");
+                                                    _logger.LogError($"Received {cosmosException.StatusCode} ({cosmosException.Message}).");
+                                                }
+                                                else
+                                                {
+                                                    errorCount++;
+                                                    stringBuilder.AppendLine($"Exception {innerExceptions.InnerExceptions.FirstOrDefault()}.");
+                                                    _logger.LogError($"Exception {innerExceptions.InnerExceptions.FirstOrDefault()}.");
+                                                }
                                             }
                                             else
                                             {
-                                                errorCount++;
-                                                stringBuilder.AppendLine($"Exception {innerExceptions.InnerExceptions.FirstOrDefault()}.");
-                                                //File.AppendAllText("D:\\Log.txt", $"Exception {innerExceptions.InnerExceptions.FirstOrDefault()}.");
-                                                //Console.WriteLine($"Exception {innerExceptions.InnerExceptions.FirstOrDefault()}.");
+                                                _logger.LogError("Exception - Something unexpected has happened.");
                                             }
                                         }
                                     }));
@@ -108,39 +113,17 @@ namespace MassiveRocketAssignment.Storage
             File.AppendAllText("D:\\Log.txt", stringBuilder.ToString());
         }
 
-        public async Task<IEnumerable<ClientEntity>> GetClientByFirstName(string firstName)
+        public async Task<IEnumerable<ClientEntity>> GetClientByFirstName(string firstName, int pageSize, int skipRecords)
         {
-            var sqlQueryText = $"SELECT * FROM c WHERE c.FirstName = '{firstName}'";
-
-            QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
-            var queryResultSetIterator = _container.GetItemQueryIterator<ClientEntity>(queryDefinition);
-            var list = new List<ClientEntity>();
-            while (queryResultSetIterator.HasMoreResults)
-            {
-                var clientResultSet = await queryResultSetIterator.ReadNextAsync();
-                foreach (var client in clientResultSet)
-                {
-                    list.Add(client);
-                }
-            }
+            var sqlQueryText = $"SELECT * FROM c WHERE Contains(c.FirstName,'{firstName}', true) OFFSET {skipRecords} LIMIT {pageSize}";
+            List<ClientEntity> list = await GetEntities<ClientEntity>(sqlQueryText);
             return list;
         }
 
         public async Task<IEnumerable<ClientEntity>> GetAllClient(int pageSize, int skipRecords)
         {
             var sqlQueryText = $"SELECT * FROM c OFFSET {skipRecords} LIMIT {pageSize}";
-
-            QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
-            var queryResultSetIterator = _container.GetItemQueryIterator<ClientEntity>(queryDefinition);
-            var list = new List<ClientEntity>();
-            while (queryResultSetIterator.HasMoreResults)
-            {
-                var clientResultSet = await queryResultSetIterator.ReadNextAsync();
-                foreach (var client in clientResultSet)
-                {
-                    list.Add(client);
-                }
-            }
+            List<ClientEntity> list = await GetEntities<ClientEntity>(sqlQueryText);
             return list;
         }
 
@@ -149,22 +132,45 @@ namespace MassiveRocketAssignment.Storage
             var sqlQueryText = $"SELECT Value Count(1) FROM c";
 
             QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
-            var queryResultSetIterator = _container.GetItemQueryStreamIterator(queryDefinition);
+            var queryResultSetIterator = _container?.GetItemQueryStreamIterator(queryDefinition);
 
-            while (queryResultSetIterator.HasMoreResults)
+            if (queryResultSetIterator != null)
             {
-                using (ResponseMessage response = await queryResultSetIterator.ReadNextAsync())
+                while (queryResultSetIterator.HasMoreResults)
                 {
-                    using (StreamReader sr = new StreamReader(response.Content))
+                    using (ResponseMessage response = await queryResultSetIterator.ReadNextAsync())
                     {
-                        var result = sr.ReadToEnd();
-                        var jsObject = JObject.Parse(result);
-                        return Convert.ToInt32(((JValue)jsObject.GetValue("Documents")[0]).Value);
-                    }
+                        using (StreamReader sr = new StreamReader(response.Content))
+                        {
+                            var result = sr.ReadToEnd();
+                            var jsObject = JObject.Parse(result);
+                            return Convert.ToInt32(((JValue)jsObject.GetValue("Documents")[0]).Value);
+                        }
 
+                    }
                 }
             }
             return 0;
+        }
+
+        private async Task<List<T>> GetEntities<T>(string sqlQueryText)
+        {
+            QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
+            var queryResultSetIterator = _container?.GetItemQueryIterator<T>(queryDefinition);
+            var list = new List<T>();
+            if (queryResultSetIterator != null)
+            {
+                while (queryResultSetIterator.HasMoreResults)
+                {
+                    var clientResultSet = await queryResultSetIterator.ReadNextAsync();
+                    foreach (var client in clientResultSet)
+                    {
+                        list.Add(client);
+                    }
+                }
+            }
+
+            return list;
         }
     }
 }

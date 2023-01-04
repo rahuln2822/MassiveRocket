@@ -1,0 +1,62 @@
+﻿@using Azure.Core;
+@model ViewModel
+@{
+    ViewData["Title"] = "Search";
+}
+
+<h1>@ViewData["Title"]</h1>
+
+<div>
+
+    <form method="post">
+        <p>
+            Search By First Name: <input type="text" asp-for="SearchString" id="txtSearch" />
+            <input asp-controller="Home" asp-action="Search" class="btn btn-primary" type="submit" value="Filter">
+        </p>
+
+        <table align="center">
+            <tr>
+                <td style="padding-right:330px">
+                    @{
+                        if (Model != null && Model.PaginationModel.ClientEntities != null)
+                        {
+                            <div style="overflow:scroll; max-height:350px; width:1000px" class="align-content-center form-group">
+                                <table class="table table-striped">
+                                    <tr>
+                                        <td>FirstName</td>
+                                        <td>LastName</td>
+                                        <td>Email</td>
+                                        <td>ContactNumber</td>
+                                    </tr>
+                                    @foreach (var item in Model.PaginationModel.ClientEntities)
+                                    {
+                                        <tr>
+                                            <td>@item.FirstName</td>
+                                            <td>@item.LastName</td>
+                                            <td>@item.Email</td>
+                                            <td>@item.ContactNumber</td>
+                                        </tr>
+                                    }
+                                </table>
+                            </div>
+                            <div>
+                                <ul class="pagination" style="width:1000px">
+                                    @for (var j = 0; j < Model.PaginationModel.MinimumPagesToDisplay; j++)
+                                    {
+                                        int pageNumber = @Model.PaginationModel.LastPage + @j;
+                                               
+                                        <li class="page-item @(pageNumber == Model.PaginationModel.CurrentPage ? "active" : "")" style="width:1000px">
+                                            <a asp-controller="Home" asp-action="Search" asp-route-searchString="@Model.SearchString" asp-route-currentpage="@pageNumber" class="page-link">@pageNumber</a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                    }
+
+                </td>
+            </tr>
+
+        </table>
+    </form>
+</div>

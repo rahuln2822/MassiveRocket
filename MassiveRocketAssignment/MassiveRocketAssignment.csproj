@@ -8,7 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="DependencyRoot.cs" />
     <Compile Remove="Program.cs" />
+    <Compile Remove="Utilities\Utilities.cs" />
   </ItemGroup>
 
   <ItemGroup>

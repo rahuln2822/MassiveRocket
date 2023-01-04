@@ -15,7 +15,7 @@ namespace MassiveRocketAssignment.Storage
 
         Task InsertBulkAsync(IEnumerable<ClientEntity> clientEntities);
 
-        Task<IEnumerable<ClientEntity>> GetClientByFirstName(string firstName);
+        Task<IEnumerable<ClientEntity>> GetClientByFirstName(string firstName, int pageSize, int skipRecords);
 
         Task<int> GetClientsCount();
 
