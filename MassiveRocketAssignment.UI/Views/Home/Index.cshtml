@@ -42,7 +42,7 @@
                             <input asp-controller="Home" asp-action="Save" class="btn btn-primary" type="submit" value="Save">
                         </td>
                         <td>
-                            <input asp-controller="Home" asp-action="Display" class="btn btn-primary" type="submit" value="Display Records">
+                            <input asp-controller="Home" asp-action="Display" asp-route-currentpage="1" class="btn btn-primary" type="submit" value="Display Records">
                         </td>
                     </tr>
                 </table>
@@ -103,7 +103,7 @@
                             <ul class="pagination" style="width:1000px">
                                 @for (var j = 0; j < Model.PaginationModel.MinimumPagesToDisplay; j++)
                                 {
-                                    int pageNumber = @Model.PaginationModel.LastPage + @j;
+                                    int pageNumber = @Model.PaginationModel.StartPage + @j;
                                     <li class="page-item @(pageNumber == Model.PaginationModel.CurrentPage ? "active" : "")" style="width:1000px">
                                         <a asp-controller="Home" asp-action="Display" asp-route-currentpage="@pageNumber" class="page-link">@pageNumber</a>
                                     </li>

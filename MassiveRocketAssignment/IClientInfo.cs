@@ -1,17 +1,13 @@
 ﻿using MassiveRocketAssignment.Storage;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MassiveRocketAssignment
 {
     public interface IClientInfo
     {
+        public int TotalRecordCount { get; set; }
         Task<IEnumerable<ClientEntity>> GetClient(string firstName, int pageSize, int skipRecords);
-        Task AddClientsByCsv(IEnumerable<string> csvContent);
-        Task<int> GetClientsCount();
+        Task AddClientsByCsv(IEnumerable<ClientEntity> clientEntities);
+        Task<int> GetClientsCount(string? firstName = null);
         Task<IEnumerable<ClientEntity>> GetAllClient(int pageSize, int skipRecords);
     }
 }

@@ -11,7 +11,7 @@
     <form method="post">
         <p>
             Search By First Name: <input type="text" asp-for="SearchString" id="txtSearch" />
-            <input asp-controller="Home" asp-action="Search" class="btn btn-primary" type="submit" value="Filter">
+            <input asp-controller="Home" asp-action="Search" asp-route-currentpage="1" class="btn btn-primary" type="submit" value="Filter">
         </p>
 
         <table align="center">
@@ -43,7 +43,7 @@
                                 <ul class="pagination" style="width:1000px">
                                     @for (var j = 0; j < Model.PaginationModel.MinimumPagesToDisplay; j++)
                                     {
-                                        int pageNumber = @Model.PaginationModel.LastPage + @j;
+                                        int pageNumber = @Model.PaginationModel.StartPage + @j;
                                                
                                         <li class="page-item @(pageNumber == Model.PaginationModel.CurrentPage ? "active" : "")" style="width:1000px">
                                             <a asp-controller="Home" asp-action="Search" asp-route-searchString="@Model.SearchString" asp-route-currentpage="@pageNumber" class="page-link">@pageNumber</a>

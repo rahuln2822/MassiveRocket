@@ -4,6 +4,9 @@ using System.Diagnostics;
 using MassiveRocketAssignment.Readers;
 using MassiveRocketAssignment.Utilities;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow;
+using MassiveRocketAssignment.Processors;
+using MassiveRocketAssignment.Storage;
+using MassiveRocketAssignment.Validation;
 
 namespace MassiveRocketAssignment.UI.Controllers
 {
@@ -12,18 +15,19 @@ namespace MassiveRocketAssignment.UI.Controllers
         private readonly ILogger<HomeController> _logger;
         private readonly IClientInfo _clientInfo;
         private readonly IReader _csvReader;
+        private readonly IBatchProcessor<string> _batchProcessor;
+
         private static string FolderBasePath = AppDomain.CurrentDomain.BaseDirectory;
         string FolderPath = $@"{FolderBasePath}\{Constants.FolderName}\{Constants.CustomerName}";
 
-        private int RecordCount = 0;
-
         private static PaginationModel PaginationModel = new PaginationModel();
 
-        public HomeController(ILogger<HomeController> logger, IClientInfo clientInfo, IReader reader)
+        public HomeController(ILogger<HomeController> logger, IClientInfo clientInfo, IReader reader, IBatchProcessor<string> batchProcessor)
         {
             _logger = logger;
             _clientInfo = clientInfo;
             _csvReader = reader;
+            _batchProcessor = batchProcessor;
         }
 
         [RequestFormLimits(MultipartBodyLengthLimit = int.MaxValue)]
@@ -34,7 +38,7 @@ namespace MassiveRocketAssignment.UI.Controllers
                 Directory.CreateDirectory(FolderPath);
             }
 
-            if(postedFile?.FileUpload?.FormFiles == null) 
+            if (postedFile?.FileUpload?.FormFiles == null)
             {
                 return View();
             }
@@ -49,11 +53,6 @@ namespace MassiveRocketAssignment.UI.Controllers
                     {
                         formFile.CopyTo(stream);
                     }
-
-                    using (var target = new MemoryStream())
-                    {
-                        formFile.CopyTo(target);
-                    }
                 }
             }
 
@@ -67,18 +66,30 @@ namespace MassiveRocketAssignment.UI.Controllers
             try
             {
                 var status = new List<Tuple<string, int>>();
+                var csvContents = new List<string>();
                 foreach (var filepath in Directory.GetFiles(FolderPath))
                 {
                     string filename = Path.GetFileName(filepath);
                     var results = _csvReader.Read(filepath).Skip(1);
 
-                    RecordCount = RecordCount + results.Count();
+                    csvContents.AddRange(results);
+
                     status.Add(Tuple.Create(filename, results.Count()));
-
-                    await _clientInfo.AddClientsByCsv(results);
-
-                    _logger.LogInformation($"{filename} - processed successful");
                 }
+
+                var batches = _batchProcessor.CreateBatches(csvContents);
+
+                var clientBatches = batches.Select(batch => ConvertBatchToClientEntity(batch));
+
+                var task = Task.Run(() =>
+                Parallel.ForEach(clientBatches, async (batch) =>
+                {
+                    await _clientInfo.AddClientsByCsv(batch);
+                }));
+
+                await task;
+                //_logger.LogInformation($"{filename} - processed successful");
+
 
                 ViewData["Status"] = status;
                 return View("Index");
@@ -88,7 +99,7 @@ namespace MassiveRocketAssignment.UI.Controllers
                 _logger.LogError($"Failed saving client data. {ex.Message}-{ex.StackTrace}");
                 return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
             }
-            finally 
+            finally
             {
                 // Archive files here.
                 // Delete after archival.
@@ -96,50 +107,100 @@ namespace MassiveRocketAssignment.UI.Controllers
                 foreach (var file in dirInfo.GetFiles())
                 {
                     file.Delete();
-                } 
+                }
             }
         }
 
         public async Task<IActionResult> Display(int currentPage = 1)
         {
-            var vm = new ViewModel();
-            PaginationModel.CurrentPage = currentPage;            
-            PaginationModel.LastPage = currentPage - 10 < 1 ? 1 : currentPage - 10;
-            var skipRecords = (currentPage - 1) * PaginationModel.PageSize;
+            int skipRecords = await SetPaging(currentPage);
+
             var results = await _clientInfo.GetAllClient(PaginationModel.PageSize, skipRecords);
             PaginationModel.ClientEntities = results.ToList();
-            vm.PaginationModel = PaginationModel;
-            return View("Index", vm);
+
+            var viewModel = new ViewModel();
+            viewModel.PaginationModel = PaginationModel;
+            return View("Index", viewModel);
         }
 
-        [Route("Home/Search/")]
-        [Route("Home/Search/{searchString?}/{currentPage}")]
         public async Task<IActionResult> Search(string searchString, int currentPage = 1)
         {
             if (searchString == null)
                 return View();
 
-            var vm = new ViewModel();
-            vm.SearchString = searchString;
-            PaginationModel.CurrentPage = currentPage;
-            PaginationModel.LastPage = currentPage - 10 < 1 ? 1 : currentPage - 10;
-            PaginationModel.Count= searchString.Length;
-            var skipRecords = (currentPage - 1) * PaginationModel.PageSize;
+            int skipRecords = await SetPaging(currentPage, searchString);
+
             var results = await _clientInfo.GetClient(searchString, PaginationModel.PageSize, skipRecords);
             PaginationModel.ClientEntities = results.ToList();
-            vm.PaginationModel = PaginationModel;
-            return View("Search", vm);
+
+            var viewModel = new ViewModel();
+            viewModel.SearchString = searchString;
+            viewModel.PaginationModel = PaginationModel;
+            return View("Search", viewModel);
         }
 
-        public IActionResult Privacy()
+        private async Task<int> SetPaging(int currentPage, string searchString = null)
         {
-            return View();
+            if (currentPage == 1)
+            {
+                _clientInfo.TotalRecordCount = await _clientInfo.GetClientsCount(searchString);
+            }
+
+            PaginationModel.CurrentPage = currentPage;
+            PaginationModel.Count = _clientInfo.TotalRecordCount;
+            PaginationModel.StartPage = currentPage - 10 < 1 ? 1 : currentPage - 10;
+
+            var endPageNumber = PaginationModel.StartPage + PaginationModel.MinimumPagesToDisplay;
+            if (endPageNumber > PaginationModel.TotalPages)
+            {
+                PaginationModel.MinimumPagesToDisplay = (PaginationModel.MinimumPagesToDisplay - (endPageNumber - PaginationModel.TotalPages)) + 1;
+            }
+            else
+            {
+                PaginationModel.MinimumPagesToDisplay = 20;
+            }
+            var skipRecords = (currentPage - 1) * PaginationModel.PageSize;
+            return skipRecords;
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+
+        private IEnumerable<ClientEntity?> ConvertBatchToClientEntity(IEnumerable<string> csvBatch)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            string customerIdentity = $"{Constants.CustomerName}";
+
+            var result = csvBatch.Select(csv => ToClientEntity(csv, customerIdentity));
+
+            return result.Where(entity => entity != null);
+        }
+
+        private ClientEntity? ToClientEntity(string csvLine, string partitionKey)
+        {
+            var clientEntity = new ClientEntity();
+            try
+            {
+                string[] values = csvLine.Split(',');
+
+                if (values.Length == 4)
+                {
+                    clientEntity.Id = $"{partitionKey}-{values[0]}-{values[3]}";
+                    clientEntity.PartitionKey = partitionKey;
+                    clientEntity.FirstName = values[0].ShouldNotBeNull();
+                    clientEntity.LastName = values[1].ShouldNotBeNull();
+                    clientEntity.Email = values[2].ShouldBeValidEmail();
+                    clientEntity.ContactNumber = values[3];
+
+                    return clientEntity;
+                }
+                else
+                {
+                    throw new ArgumentException($"Incorrect data - {csvLine}");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error converting {csvLine} to ClientEntity - {ex.Message} : {ex.StackTrace} ");
+                return null;
+            }
         }
     }
 }

@@ -9,7 +9,7 @@ namespace MassiveRocketAssignment.UI.Models
     {
         [BindProperty(SupportsGet = true)]
         public int CurrentPage { get; set; } = 1;
-        public int LastPage { get; set; }
+        public int StartPage { get; set; }
         public int Count { get; set; }
         public int PageSize { get; set; } = 50;
         public int TotalPages => Count == 0 ? 1 : (int)Math.Ceiling(decimal.Divide(Count, PageSize));

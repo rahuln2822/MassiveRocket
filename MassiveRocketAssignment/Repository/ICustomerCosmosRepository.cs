@@ -17,7 +17,7 @@ namespace MassiveRocketAssignment.Storage
 
         Task<IEnumerable<ClientEntity>> GetClientByFirstName(string firstName, int pageSize, int skipRecords);
 
-        Task<int> GetClientsCount();
+        Task<int> GetClientsCount(string? firstName = null);
 
         Task<IEnumerable<ClientEntity>> GetAllClient(int pageSize, int skipRecords);
     }

@@ -106,7 +106,7 @@ namespace MassiveRocketAssignment.Storage
             Console.WriteLine($"Start Processing batch : {DateTime.Now}");
 
             var result = clientEntities.Select(ce => CreateTask(ce));
-            await Task.WhenAll(result);
+            await Task.WhenAll(result).ConfigureAwait(false);
 
             Console.WriteLine($"End Processing batch : {DateTime.Now}");
             Console.WriteLine($"Error Count - {errorCount}");
@@ -127,9 +127,17 @@ namespace MassiveRocketAssignment.Storage
             return list;
         }
 
-        public async Task<int> GetClientsCount()
+        public async Task<int> GetClientsCount(string? firstName = null)
         {
-            var sqlQueryText = $"SELECT Value Count(1) FROM c";
+            string sqlQueryText;
+            if (firstName == null)
+            {
+                sqlQueryText = $"SELECT Value Count(1) FROM c";
+            }
+            else
+            {
+                sqlQueryText = $"SELECT Value Count(1) FROM c WHERE Contains(c.FirstName,'{firstName}', true)";
+            }
 
             QueryDefinition queryDefinition = new QueryDefinition(sqlQueryText);
             var queryResultSetIterator = _container?.GetItemQueryStreamIterator(queryDefinition);
