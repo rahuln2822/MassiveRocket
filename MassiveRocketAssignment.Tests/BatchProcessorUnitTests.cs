@@ -1,17 +1,9 @@
 ﻿using FluentAssertions;
-using MassiveRocketAssignment;
 using MassiveRocketAssignment.Processors;
-using MassiveRocketAssignment.Tests;
-using MassiveRocketAssignment.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using NSubstitute;
-using System;
-using System.Collections.Generic;
-using System.Drawing;
-using System.Security.Policy;
 
 namespace MassiveRocketAssignent.Tests
 {

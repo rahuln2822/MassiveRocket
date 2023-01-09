@@ -84,13 +84,11 @@ namespace MassiveRocketAssignment.Storage
                                                 if (innerExceptions.InnerExceptions.FirstOrDefault(innerEx => innerEx is CosmosException) is CosmosException cosmosException)
                                                 {
                                                     errorCount++;
-                                                    stringBuilder.AppendLine($"Received {cosmosException.StatusCode} ({cosmosException.Message}).");
                                                     _logger.LogError($"Received {cosmosException.StatusCode} ({cosmosException.Message}).");
                                                 }
                                                 else
                                                 {
                                                     errorCount++;
-                                                    stringBuilder.AppendLine($"Exception {innerExceptions.InnerExceptions.FirstOrDefault()}.");
                                                     _logger.LogError($"Exception {innerExceptions.InnerExceptions.FirstOrDefault()}.");
                                                 }
                                             }
@@ -110,7 +108,6 @@ namespace MassiveRocketAssignment.Storage
 
             Console.WriteLine($"End Processing batch : {DateTime.Now}");
             Console.WriteLine($"Error Count - {errorCount}");
-            File.AppendAllText("D:\\Log.txt", stringBuilder.ToString());
         }
 
         public async Task<IEnumerable<ClientEntity>> GetClientByFirstName(string firstName, int pageSize, int skipRecords)

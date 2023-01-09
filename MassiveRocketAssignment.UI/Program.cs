@@ -1,11 +1,3 @@
-using MassiveRocketAssignment.Processors;
-using MassiveRocketAssignment.Readers;
-using MassiveRocketAssignment.Storage;
-using MassiveRocketAssignment;
-using MassiveRocketAssignment.UI.Data;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using MassiveRocketAssignment.UI;
 
 var builder = WebApplication.CreateBuilder(args);

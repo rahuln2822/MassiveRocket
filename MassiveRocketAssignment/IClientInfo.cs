@@ -6,7 +6,7 @@ namespace MassiveRocketAssignment
     {
         public int TotalRecordCount { get; set; }
         Task<IEnumerable<ClientEntity>> GetClient(string firstName, int pageSize, int skipRecords);
-        Task AddClientsByCsv(IEnumerable<ClientEntity> clientEntities);
+        Task AddClients(IEnumerable<ClientEntity> clientEntities);
         Task<int> GetClientsCount(string? firstName = null);
         Task<IEnumerable<ClientEntity>> GetAllClient(int pageSize, int skipRecords);
     }

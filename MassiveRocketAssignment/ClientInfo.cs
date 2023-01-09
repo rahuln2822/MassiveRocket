@@ -1,7 +1,4 @@
-﻿using MassiveRocketAssignment.Processors;
-using MassiveRocketAssignment.Readers;
-using MassiveRocketAssignment.Storage;
-using MassiveRocketAssignment.Utilities;
+﻿using MassiveRocketAssignment.Storage;
 using Microsoft.Extensions.Logging;
 
 namespace MassiveRocketAssignment
@@ -19,7 +16,7 @@ namespace MassiveRocketAssignment
             _logger = logger;
         }
 
-        public async Task AddClientsByCsv(IEnumerable<ClientEntity> clientEntities)
+        public async Task AddClients(IEnumerable<ClientEntity> clientEntities)
         {
             try
             {

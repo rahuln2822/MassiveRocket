@@ -84,7 +84,7 @@ namespace MassiveRocketAssignment.UI.Controllers
                 var task = Task.Run(() =>
                 Parallel.ForEach(clientBatches, async (batch) =>
                 {
-                    await _clientInfo.AddClientsByCsv(batch);
+                    await _clientInfo.AddClients(batch);
                 }));
 
                 await task;
